@@ -6,18 +6,23 @@ router.get('/', async (req, res) => {
   const { search } = req.query;
 
   let query = 'SELECT id, name, description, price, stock, category, image_url FROM products';
+  const params = [];
 
-  if (search) {
-    // VULNERABLE: String interpolation ke klausa WHERE
-    query += ` WHERE name ILIKE '%${search}%' OR description ILIKE '%${search}%'`;
+  if (search && typeof search === 'string' && search.trim() !== '') {
+    // AMAN: Parameterized query untuk mencegah SQL Injection UNION-based maupun Error-based
+    query += ' WHERE name ILIKE $1 OR description ILIKE $1';
+    params.push(`%${search.trim()}%`);
   }
 
+  query += ' ORDER BY id ASC';
+
   try {
-    const result = await pool.query(query);
+    const result = await pool.query(query, params);
     res.json({ count: result.rows.length, data: result.rows });
   } catch (err) {
-    // Mengembalikan detail error PostgreSQL untuk analisis eksploitasi
-    res.status(500).json({ error: err.message, query });
+    // Sanitasi error: cegah kebocoran sintaks query atau error internal database
+    console.error('Error retrieving products:', err);
+    res.status(500).json({ error: 'Failed to retrieve products' });
   }
 });
 

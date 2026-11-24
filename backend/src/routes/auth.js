@@ -6,17 +6,22 @@ const pool = require('../db');
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  // VULNERABLE: String concatenation langsung tanpa parameterization
-  const query = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`;
-
   try {
-    const result = await pool.query(query);
+    // AMAN: Parameterized query untuk mencegah SQL Injection
+    const query = 'SELECT id, username, password, full_name, role FROM users WHERE username = $1';
+    const result = await pool.query(query, [username]);
 
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const user = result.rows[0];
+
+    // Verifikasi password
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }
+
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role, fullName: user.full_name },
       process.env.JWT_SECRET || 'supersecret_pentest_key',
@@ -34,8 +39,9 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    // Mengembalikan detail error SQL agar mendukung error-based reconnaissance
-    res.status(500).json({ error: err.message, query });
+    // Sanitasi error: cegah information disclosure / error database internal
+    console.error('Error during login:', err);
+    res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
   }
 });
 

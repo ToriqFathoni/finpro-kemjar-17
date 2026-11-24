@@ -16,7 +16,8 @@ router.get('/', authenticateToken, async (req, res) => {
     const result = await pool.query(query, [req.user.id]);
     res.json({ data: result.rows });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error fetching orders:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -24,7 +25,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
   const orderId = req.params.id;
 
   try {
-    // VULNERABLE IDOR: Tidak ada filter 'AND o.user_id = $2'
     const query = `
       SELECT o.id, o.user_id, o.quantity, o.total_price, o.shipping_address, 
              o.recipient_phone, o.status, o.created_at,
@@ -42,10 +42,23 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Order invoice not found' });
     }
 
-    // Data langsung dikembalikan tanpa verifikasi kepemilikan
-    res.json({ data: result.rows[0] });
+    const order = result.rows[0];
+
+    // REMEDIASI IDOR: Object-Level Authorization Check
+    // Hanya pemilik sah (order.user_id === req.user.id) atau admin yang boleh mengakses
+    const isOwner = order.user_id === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        error: 'Forbidden: You do not have permission to view this order invoice'
+      });
+    }
+
+    res.json({ data: order });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error fetching order invoice:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
