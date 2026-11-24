@@ -33,7 +33,7 @@ trap cleanup SIGINT SIGTERM
 echo ""
 echo "=========================================================="
 echo "  Semua service telah aktif:"
-echo "  - Database : localhost:5433 (PostgreSQL)"
+echo "  - Database : localhost:5434 (PostgreSQL)"
 echo "  - Backend  : http://localhost:5000"
 echo "  - Frontend : http://localhost:3000"
 echo "  Tekan Ctrl+C untuk menghentikan server."

@@ -20,19 +20,19 @@ flowchart TD
     Client["Client / Pentester (Browser / Burp Suite / curl / sqlmap)"]
     FE["Frontend: Next.js 16 (Port 3000)<br/>UI Katalog, Form Login, Invoice Viewer"]
     BE["Backend: Express.js (Port 5000)<br/>REST API Auth, Products, Orders"]
-    DB[("Database: PostgreSQL 16 (Port 5433)<br/>Container: pentest_postgres<br/>pentest_db")]
+    DB[("Database: PostgreSQL 16 (Port 5434)<br/>Container: pentest_postgres<br/>pentest_db")]
 
     Client -->|HTTP / :3000| FE
     Client -->|REST API / :5000| BE
     FE -->|API Calls / :5000| BE
-    BE -->|SQL Queries / :5433| DB
+    BE -->|SQL Queries / :5434| DB
 ```
 
 | Layanan | Port Host | Port Container / Internal | Teknologi | Deskripsi |
 | :--- | :--- | :--- | :--- | :--- |
 | **Frontend** | `3000` | `3000` | Next.js 16 (Turbopack, Tailwind) | Tampilan UI e-commerce, login, pencarian, invoice |
 | **Backend** | `5000` | `5000` | Express.js, Node.js v22 | REST API, manajemen JWT, eksekusi query PostgreSQL |
-| **Database** | `5433` | `5432` | PostgreSQL 16 Alpine | Database relasional menyimpan data user, produk, order |
+| **Database** | `5434` | `5432` | PostgreSQL 16 Alpine | Database relasional menyimpan data user, produk, order |
 
 ---
 
@@ -44,7 +44,7 @@ finpro-kemjar-17/
 │   ├── src/
 │   │   ├── middleware/     # JWT authentication middleware
 │   │   ├── routes/         # auth.js, products.js, orders.js
-│   │   ├── db.js           # Koneksi PostgreSQL pool (port 5433)
+│   │   ├── db.js           # Koneksi PostgreSQL pool (port 5434)
 │   │   └── index.js        # Server Express.js entry point
 │   ├── .env                # Variabel environment backend
 │   └── package.json
@@ -71,7 +71,7 @@ finpro-kemjar-17/
 ### Backend (`backend/.env`)
 ```env
 PORT=5000
-DATABASE_URL=postgresql://admin:admin123@localhost:5433/pentest_db
+DATABASE_URL=postgresql://admin:admin123@localhost:5434/pentest_db
 JWT_SECRET=supersecret_pentest_key
 ```
 
@@ -106,7 +106,7 @@ Cukup jalankan satu perintah berikut di root direktori proyek:
 ./run-local.sh
 ```
 Skrip akan secara otomatis:
-1. Menyalakan database PostgreSQL via Docker Compose (`pentest_postgres` di port 5433).
+1. Menyalakan database PostgreSQL via Docker Compose (`pentest_postgres` di port 5434).
 2. Menjalankan server backend Express.js di port 5000.
 3. Menjalankan server frontend Next.js di port 3000.
 4. Menangani graceful shutdown saat tombol `Ctrl+C` ditekan.
